@@ -9,7 +9,9 @@ function createPromise(position, delay) {
         resolve({ position, delay });
       }, delay);
     } else {
-      reject({ position, delay });
+      setTimeout(() => {
+        reject({ position, delay });
+      }, delay);
     }
   });
 }
@@ -27,19 +29,25 @@ function handleSubmit(event) {
 
   outputDiv.innerHTML = ''; // Limpiar el contenido anterior
 
-  for (let i = 1; i <= amount; i++) {
-    const delay = firstDelay + (i - 1) * delayStep;
+  function processPromise(position) {
+    if (position <= amount) {
+      const delay = firstDelay + (position - 1) * delayStep;
 
-    createPromise(i, delay)
-      .then(({ position, delay }) => {
-        const message = `✅ Fulfilled promise ${position} in ${delay}ms<br>`;
-        outputDiv.innerHTML += message;
-      })
-      .catch(({ position, delay }) => {
-        const message = `❌ Rejected promise ${position} in ${delay}ms<br>`;
-        outputDiv.innerHTML += message;
-      });
+      createPromise(position, delay)
+        .then(({ position, delay }) => {
+          const message = `✅ Fulfilled promise ${position} in ${delay}ms<br>`;
+          outputDiv.innerHTML += message;
+          processPromise(position + 1); // Llamar recursivamente para procesar la siguiente promesa
+        })
+        .catch(({ position, delay }) => {
+          const message = `❌ Rejected promise ${position} in ${delay}ms<br>`;
+          outputDiv.innerHTML += message;
+          processPromise(position + 1); // Llamar recursivamente para procesar la siguiente promesa
+        });
+    }
   }
+
+  processPromise(1); // Comenzar el proceso con la primera promesa
 
   form.reset();
 }

@@ -514,10 +514,12 @@ function createPromise(position, delay) {
                 delay
             });
         }, delay);
-        else reject({
-            position,
-            delay
-        });
+        else setTimeout(()=>{
+            reject({
+                position,
+                delay
+            });
+        }, delay);
     });
 }
 function handleSubmit(event) {
@@ -529,16 +531,21 @@ function handleSubmit(event) {
     const delayStep = parseInt(stepInput.value);
     const amount = parseInt(amountInput.value);
     outputDiv.innerHTML = ""; // Limpiar el contenido anterior
-    for(let i = 1; i <= amount; i++){
-        const delay1 = firstDelay + (i - 1) * delayStep;
-        createPromise(i, delay1).then(({ position , delay  })=>{
-            const message = `✅ Fulfilled promise ${position} in ${delay}ms<br>`;
-            outputDiv.innerHTML += message;
-        }).catch(({ position , delay  })=>{
-            const message = `❌ Rejected promise ${position} in ${delay}ms<br>`;
-            outputDiv.innerHTML += message;
-        });
+    function processPromise(position1) {
+        if (position1 <= amount) {
+            const delay1 = firstDelay + (position1 - 1) * delayStep;
+            createPromise(position1, delay1).then(({ position , delay  })=>{
+                const message = `✅ Fulfilled promise ${position} in ${delay}ms<br>`;
+                outputDiv.innerHTML += message;
+                processPromise(position + 1); // Llamar recursivamente para procesar la siguiente promesa
+            }).catch(({ position , delay  })=>{
+                const message = `❌ Rejected promise ${position} in ${delay}ms<br>`;
+                outputDiv.innerHTML += message;
+                processPromise(position + 1); // Llamar recursivamente para procesar la siguiente promesa
+            });
+        }
     }
+    processPromise(1); // Comenzar el proceso con la primera promesa
     form.reset();
 }
 form.addEventListener("submit", handleSubmit);
